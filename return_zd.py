@@ -12,9 +12,9 @@ ap_username = os.getenv("AP_USERNAME")
 zd_ip = os.getenv("ZD_IP")
 def read_file(input_file):
     with open(input_file, newline='') as csvfile:
-        rows = csv.reader(csvfile)
+        rows = csv.DictReader(csvfile)
         for row in rows:
-            ap_info.append({"ip": row[0], "passwd": row[1], "secret": row[2], "name": row[3]})
+            ap_info.append(row)
             
 def run():
     for ap in ap_info:
