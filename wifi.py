@@ -1,11 +1,12 @@
 import argparse
 import os
-import re
-
-from dotenv import load_dotenv
-import pexpect
 import random
+import re
 import string
+
+import pexpect
+from dotenv import load_dotenv
+
 
 class ApInit:
     def __init__(self):
@@ -22,7 +23,7 @@ class ApInit:
         self.radius_port = os.getenv("RADIUS_PORT")
         # self.radius_secret = os.getenv("RADIUS_SECRET")
         self.radius_secret = self.getRandomStr()
-        self.new_passwd  = self.getRandomStr()
+        self.new_passwd = self.getRandomStr()
 
         parser = argparse.ArgumentParser(description="ZoneFlex AP configurations")
         parser.add_argument("name", type=str, help="Device name")
@@ -42,11 +43,15 @@ class ApInit:
         return f"10.3.{div}.{remainder}"
 
     def getRandomStr(self):
-        secret = ''.join(random.choices(string.ascii_uppercase + string.ascii_lowercase + string.digits, k=8))
+        secret = "".join(
+            random.choices(
+                string.ascii_uppercase + string.ascii_lowercase + string.digits, k=8
+            )
+        )
         return secret
 
     def run(self):
-        with pexpect.spawn("ssh -o StrictHostKeyChecking=no 192.168.0.1") as ssh:
+        with pexpect.spawn(f"ssh -o StrictHostKeyChecking=no {self.IP}") as ssh:
             print("login")
             ssh.expect(["login"])
             ssh.sendline(self.username)
@@ -59,12 +64,13 @@ class ApInit:
                 f"set ipaddr wan vlan {self.vlan} {self.IP} 255.255.248.0 {self.gateway}",
                 "set ipmode wan ipv4",
                 f"set device-name {self.name}",
+                f"set password {self.new_passwd}"
                 f"set ssid wlan0 {self.ssid}",
                 "set director ip 8.7.6.3",
                 "set state wlan0 up",
             ]
 
-            print("Sets up interface")
+            print("Setting up interface")
             for command in commands:
                 ssh.expect(["rkscli:"])
                 ssh.sendline(command)
@@ -133,9 +139,12 @@ class ApInit:
             print("success")
 
         # save to file ap_list
-        with open("ap_list.csv", "a") as ap_list:
-            ap_list.wrtie(self.IP + ', ' + self.new_passwd + ', ' + self.radius_secret)
-
+        with open("ap_list.csv", "a", encoding="utf-8") as ap_list:
+            if ap_list.tell() == 0:
+                ap_list.write("name,ip,passwd,secret\n")
+            ap_list.write(
+                f"{self.name},{self.IP},{self.new_passwd},{self.radius_secret}\n"
+            )
         for ip in [self.radius_ip, self.radius_backup_ip]:
             with pexpect.spawn(f"ssh -o {ip}") as ssh:
                 pass
