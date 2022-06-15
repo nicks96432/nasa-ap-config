@@ -1,7 +1,5 @@
-import argparse
 import csv
 import os
-import re
 import sys
 
 import pexpect
@@ -14,7 +12,7 @@ zd_ip = os.getenv("ZD_IP")
 
 
 def read_file(input_file):
-    with open(input_file, newline="") as csvfile:
+    with open(input_file, newline="", encoding="utf-8") as csvfile:
         rows = csv.DictReader(csvfile)
         for row in rows:
             ap_info.append(row)
@@ -22,12 +20,12 @@ def read_file(input_file):
 
 def run():
     for ap in ap_info:
-        with pexpect.spawn("ssh -o StrictHostKeyChecking=no %s" % ap["ip"]) as ssh:
+        with pexpect.spawn(f"ssh -o StrictHostKeyChecking=no {ap['ip']}") as ssh:
             print("login")
             ssh.expect(["login"])
             ssh.sendline(ap_username)
             ssh.expect(["password"])
-            ssh.sendline(ap["passwd"])
+            ssh.sendline("sp-admin")
 
             ssh.expect(["rkscli:"])
             ssh.sendline(f"set director ip {zd_ip}")
@@ -41,7 +39,7 @@ def run():
             ssh.sendline("reboot")
             ssh.expect(["OK"])
 
-            print("AP %s has connected to ZD" % ap["ip"])
+            print(f"AP {ap['ip']} has connected to ZD")
 
 
 def main():

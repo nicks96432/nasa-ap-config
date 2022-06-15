@@ -34,19 +34,19 @@ class setRadius:
         # self.IP = self._IDtoIP(args.identifier)
 
         self.ap_info = []
+        self.input_file = "ap_list.csv"
         self.read_ap_info()
-        self.input_file = "ap_info.csv"
 
     def read_ap_info(self):
-        with open(self.input_file, newline='') as csvfile:
-            rows = csv.reader(csvfile)
+        with open(self.input_file, "r", newline="", encoding="utf-8") as csvfile:
+            rows = csv.DictReader(csvfile)
             for row in rows:
-                self.ap_info.append({"ip": row[0], "passwd": row[1], "secret": row[2], "name": row[3]})
+                self.ap_info.append(row)
 
     def run(self):
         # ssh
         for radius in [self.radius_ip, self.radius_backup_ip]:
-            with pexpect.spawn("ssh -o %s@%s" % (self.username, radius)) as ssh:
+            with pexpect.spawn(f"ssh {self.username}@{radius}") as ssh:
                 print("login first Radius")
                 ssh.expect(["password"])
                 ssh.sendline(self.passwd)
@@ -60,7 +60,11 @@ class setRadius:
 
                 # set ap
                 for ap in self.ap_info:
-                    ssh.sendline('echo -e "client %s {\n\tip_addr = %s\n\tsecret = %s\n}" >> clients.conf' % (ap["name"], ap["ip"], ap["secret"]))
+                    ssh.sendline(
+                        rf'echo -e "client {ap["name"]} {{\n\tipaddr = {ap["ip"]}\n\tsecret = {ap["secret"]}\n}}" >> clients.conf'
+                    )
+                ssh.sendline("")
+
 
 if __name__ == "__main__":
     setRad = setRadius()
