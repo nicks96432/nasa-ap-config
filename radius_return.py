@@ -1,8 +1,9 @@
+import csv
 import os
 
-from dotenv import load_dotenv
 import pexpect
-import csv
+from dotenv import load_dotenv
+
 
 class setRadius:
     def __init__(self):

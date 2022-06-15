@@ -23,7 +23,6 @@ class ApInit:
         self.radius_port = os.getenv("RADIUS_PORT")
         # self.radius_secret = os.getenv("RADIUS_SECRET")
         self.radius_secret = self.getRandomStr()
-        self.new_passwd = self.getRandomStr()
 
         parser = argparse.ArgumentParser(description="ZoneFlex AP configurations")
         parser.add_argument("name", type=str, help="Device name")
@@ -64,7 +63,6 @@ class ApInit:
                 f"set ipaddr wan vlan {self.vlan} {self.IP} 255.255.248.0 {self.gateway}",
                 "set ipmode wan ipv4",
                 f"set device-name {self.name}",
-                f"set password {self.new_passwd}"
                 f"set ssid wlan0 {self.ssid}",
                 "set director ip 8.7.6.3",
                 "set state wlan0 up",
@@ -141,9 +139,9 @@ class ApInit:
         # save to file ap_list
         with open("ap_list.csv", "a", encoding="utf-8") as ap_list:
             if ap_list.tell() == 0:
-                ap_list.write("name,ip,passwd,secret\n")
+                ap_list.write("name,ip,secret\n")
             ap_list.write(
-                f"{self.name},{self.IP},{self.new_passwd},{self.radius_secret}\n"
+                f"{self.name},{self.IP},{self.radius_secret}\n"
             )
         for ip in [self.radius_ip, self.radius_backup_ip]:
             with pexpect.spawn(f"ssh -o {ip}") as ssh:
