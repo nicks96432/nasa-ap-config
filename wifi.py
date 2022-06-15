@@ -4,7 +4,8 @@ import re
 
 from dotenv import load_dotenv
 import pexpect
-
+import random
+import string
 
 class ApInit:
     def __init__(self):
@@ -19,7 +20,9 @@ class ApInit:
         self.radius_ip = os.getenv("RADIUS_IP")
         self.radius_backup_ip = os.getenv("RADIUS_BACKUP_IP")
         self.radius_port = os.getenv("RADIUS_PORT")
-        self.radius_secret = os.getenv("RADIUS_SECRET")
+        # self.radius_secret = os.getenv("RADIUS_SECRET")
+        self.radius_secret = self.getRandomStr()
+        self.new_passwd  = self.getRandomStr()
 
         parser = argparse.ArgumentParser(description="ZoneFlex AP configurations")
         parser.add_argument("name", type=str, help="Device name")
@@ -37,6 +40,10 @@ class ApInit:
         div = id_num // 256
         remainder = id_num % 256
         return f"10.3.{div}.{remainder}"
+
+    def getRandomStr(self):
+        secret = ''.join(random.choices(string.ascii_uppercase + string.ascii_lowercase + string.digits, k=8))
+        return secret
 
     def run(self):
         with pexpect.spawn("ssh -o StrictHostKeyChecking=no 192.168.0.1") as ssh:
@@ -124,6 +131,10 @@ class ApInit:
             ssh.expect(["OK"])
             ssh.sendline("reboot now")
             print("success")
+
+        # save to file ap_list
+        with open("ap_list.csv", "a") as ap_list:
+            ap_list.wrtie(self.IP + ', ' + self.new_passwd + ', ' + self.radius_secret)
 
         for ip in [self.radius_ip, self.radius_backup_ip]:
             with pexpect.spawn(f"ssh -o {ip}") as ssh:
